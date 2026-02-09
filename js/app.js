@@ -90,6 +90,9 @@ class SplitBrowser {
         div.className = 'pane';
         div.dataset.paneId = pane.id;
 
+        // Route URL through proxy if it's a web URL
+        const iframeSrc = pane.url ? '/proxy?url=' + encodeURIComponent(pane.url) : 'about:blank';
+
         div.innerHTML = `
             <div class="address-bar">
                 <input type="text"
@@ -106,7 +109,7 @@ class SplitBrowser {
                 </label>
                 <button class="btn-close" onclick="event.stopPropagation(); app.removePane(${pane.id})">✕</button>
             </div>
-            <iframe src="${pane.url}"></iframe>
+            <iframe src="${iframeSrc}"></iframe>
         `;
 
         return div;
@@ -158,9 +161,11 @@ class SplitBrowser {
             url = 'https://' + url;
         }
 
-        iframe.src = url;
+        // Route through proxy to bypass X-Frame-Options
+        const proxyUrl = '/proxy?url=' + encodeURIComponent(url);
+        iframe.src = proxyUrl;
 
-        // Update pane data
+        // Update pane data (store original URL, not proxy URL)
         const pane = this.panes.find(p => p.id === paneId);
         if (pane) pane.url = url;
 
